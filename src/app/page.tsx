@@ -48,8 +48,8 @@ export default function LandingPage() {
       {/* Background photo with flowing drift */}
       <div className="absolute inset-0" style={imgStyle}>
         <Image
-          src="https://picsum.photos/seed/42/1920/1080"
-          alt="hero"
+          src="/photos/landing-page.jpg"
+          alt="landing"
           fill
           className="object-cover"
           priority

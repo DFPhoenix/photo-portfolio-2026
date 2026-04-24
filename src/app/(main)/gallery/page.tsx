@@ -1,9 +1,10 @@
 import PhotoGrid from "@/app/_components/PhotoGrid"
-import { photos } from "@/app/_lib/photos"
+import { getAllPhotos } from "@/app/_lib/photos"
 
 export const metadata = { title: "Gallery — Studio" }
 
 export default function GalleryHomePage() {
+  const photos = getAllPhotos()
   return (
     <div>
       <header className="px-8 pt-12 pb-2">
