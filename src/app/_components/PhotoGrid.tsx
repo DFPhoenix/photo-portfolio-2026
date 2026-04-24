@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { Photo, photoSrc } from "@/app/_lib/photos"
+import { Photo } from "@/app/_lib/photos"
 
 export default function PhotoGrid({ photos }: { photos: Photo[] }) {
   return (
@@ -14,7 +14,7 @@ export default function PhotoGrid({ photos }: { photos: Photo[] }) {
             style={{ aspectRatio: photo.portrait ? "4/5" : "3/2" }}
           >
             <Image
-              src={photoSrc(photo.seed, photo.portrait)}
+              src={photo.src}
               alt={photo.title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
