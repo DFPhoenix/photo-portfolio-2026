@@ -1,11 +1,52 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
+import { useState, useEffect } from "react"
+
+type Transform = { x: number; y: number; scale: number }
+
+function randomTransform(): Transform {
+  return {
+    x: (Math.random() - 0.5) * 8,         // ±4% horizontal drift
+    y: (Math.random() - 0.5) * 5,         // ±2.5% vertical drift
+    scale: 1.1 + Math.random() * 0.08,    // 1.10 – 1.18 scale
+  }
+}
+
+const IDLE: Transform = { x: 0, y: 0, scale: 1 }
 
 export default function LandingPage() {
+  const [hovered, setHovered] = useState(false)
+  const [tf, setTf] = useState<Transform>(IDLE)
+
+  useEffect(() => {
+    if (!hovered) {
+      setTf(IDLE)
+      return
+    }
+    // move immediately, then keep drifting every 2.5s
+    setTf(randomTransform())
+    const id = setInterval(() => setTf(randomTransform()), 2500)
+    return () => clearInterval(id)
+  }, [hovered])
+
+  const imgStyle = {
+    transform: `scale(${tf.scale}) translate(${tf.x}%, ${tf.y}%)`,
+    // transition slightly longer than interval so motion is continuous
+    transition: hovered
+      ? "transform 3000ms cubic-bezier(0.4, 0, 0.2, 1)"
+      : "transform 1400ms cubic-bezier(0.4, 0, 0.2, 1)",
+  }
+
   return (
-    <main className="relative h-screen w-full overflow-hidden group cursor-default select-none">
-      {/* Background photo — zooms in on hover */}
-      <div className="absolute inset-0 transition-transform duration-[1200ms] ease-in-out group-hover:scale-110">
+    <main
+      className="relative h-screen w-full overflow-hidden cursor-default select-none"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Background photo with flowing drift */}
+      <div className="absolute inset-0" style={imgStyle}>
         <Image
           src="https://picsum.photos/seed/42/1920/1080"
           alt="hero"
@@ -15,8 +56,11 @@ export default function LandingPage() {
         />
       </div>
 
-      {/* Dark overlay — slightly lifts on hover */}
-      <div className="absolute inset-0 bg-black/55 group-hover:bg-black/45 transition-colors duration-[1200ms]" />
+      {/* Dark overlay */}
+      <div
+        className="absolute inset-0 transition-colors duration-[1200ms]"
+        style={{ background: hovered ? "rgba(0,0,0,0.42)" : "rgba(0,0,0,0.56)" }}
+      />
 
       {/* Content */}
       <div className="relative z-10 flex h-full flex-col items-center justify-center text-center text-white px-8">
@@ -24,7 +68,10 @@ export default function LandingPage() {
           Photography Portfolio
         </p>
 
-        <h1 className="text-7xl sm:text-8xl md:text-9xl font-extralight tracking-[0.12em] uppercase mb-6 transition-all duration-700 group-hover:tracking-[0.18em]">
+        <h1
+          className="text-7xl sm:text-8xl md:text-9xl font-extralight uppercase mb-6 transition-all duration-700"
+          style={{ letterSpacing: hovered ? "0.18em" : "0.12em" }}
+        >
           Studio
         </h1>
 
