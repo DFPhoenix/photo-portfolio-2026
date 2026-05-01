@@ -13,7 +13,10 @@ const navLinks = [
 export default function GallerySidebar() {
   const pathname = usePathname()
 
-  const isActive = (href: string) => pathname === href
+  const isActive = (href: string) => {
+    if (href === "/gallery") return pathname === "/gallery"
+    return pathname === href || pathname.startsWith(href + "/")
+  }
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-56 bg-black flex flex-col pt-16 pb-10 px-8 z-20">

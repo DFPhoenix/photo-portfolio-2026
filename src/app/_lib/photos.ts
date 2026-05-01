@@ -16,11 +16,15 @@ export type Photo = {
   portrait: boolean
 }
 
-type CloudinaryResource = {
-  public_id: string
-  width: number
-  height: number
+export type PhotoFolder = {
+  name: string   // display name, e.g. "Summer 2024"
+  slug: string   // Cloudinary subfolder name, used in URL
+  category: "wedding" | "portrait"
+  photos: Photo[]
 }
+
+type CloudinaryResource = { public_id: string; width: number; height: number }
+type CloudinarySubFolder = { name: string; path: string }
 
 function resourceToPhoto(
   r: CloudinaryResource,
@@ -28,12 +32,10 @@ function resourceToPhoto(
   index: number
 ): Photo {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? "dpfvicaqf"
-  const filename = path.basename(r.public_id)
-  const title = filename
+  const title = path.basename(r.public_id)
     .replace(/[-_]+/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase())
     .trim()
-
   return {
     id: `${category[0]}${index + 1}`,
     title,
@@ -43,31 +45,81 @@ function resourceToPhoto(
   }
 }
 
-async function fetchCategory(category: "wedding" | "portrait"): Promise<Photo[]> {
+async function fetchFolders(category: "wedding" | "portrait"): Promise<PhotoFolder[]> {
   try {
-    const result = await cloudinary.api.resources_by_asset_folder(`galleries/${category}`, {
-      resource_type: "image",
-      max_results: 500,
-    })
-    return (result.resources as CloudinaryResource[])
+    // Run subfolder list + direct-photo fetch in parallel
+    const [{ folders }, directResult] = await Promise.all([
+      cloudinary.api.sub_folders(`galleries/${category}`),
+      cloudinary.api.resources_by_asset_folder(`galleries/${category}`, {
+        resource_type: "image",
+        max_results: 500,
+      }).catch(() => ({ resources: [] })),
+    ])
+
+    // Subfolders → one PhotoFolder each (multiple photos)
+    const subfolderFolders = await Promise.all(
+      (folders as CloudinarySubFolder[]).map(async (f) => {
+        try {
+          const result = await cloudinary.api.resources_by_asset_folder(f.path, {
+            resource_type: "image",
+            max_results: 500,
+          })
+          const photos = (result.resources as CloudinaryResource[])
+            .sort((a, b) => a.public_id.localeCompare(b.public_id))
+            .map((r, i) => resourceToPhoto(r, category, i))
+          return {
+            name: f.name.replace(/[-_]+/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
+            slug: f.name,
+            category,
+            photos,
+          } satisfies PhotoFolder
+        } catch {
+          return null
+        }
+      })
+    )
+
+    // Loose photos directly in galleries/{category} → one PhotoFolder per photo
+    const directFolders: PhotoFolder[] = (directResult.resources as CloudinaryResource[])
       .sort((a, b) => a.public_id.localeCompare(b.public_id))
-      .map((r, i) => resourceToPhoto(r, category, i))
+      .map((r, i) => {
+        const photo = resourceToPhoto(r, category, i)
+        const slug = path.basename(r.public_id)
+        return {
+          name: slug.replace(/[-_]+/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
+          slug,
+          category,
+          photos: [photo],
+        }
+      })
+
+    const validSubfolders = subfolderFolders.filter(
+      (f): f is PhotoFolder => f !== null && f.photos.length > 0
+    )
+    return [...validSubfolders, ...directFolders]
   } catch (err) {
-    console.error(`Failed to fetch ${category} photos from Cloudinary:`, err)
+    console.error(`Failed to fetch ${category} folders:`, err)
     return []
   }
 }
 
-// Cache each category separately; both share the "gallery" tag for revalidation
-export const getPhotosByCategory = unstable_cache(fetchCategory, ["cloudinary-gallery"], {
+export const getFoldersByCategory = unstable_cache(fetchFolders, ["cloudinary-folders"], {
   tags: ["gallery"],
   revalidate: 10,
 })
 
-export async function getAllPhotos(): Promise<Photo[]> {
+export async function getAllFolders(): Promise<PhotoFolder[]> {
   const [wedding, portrait] = await Promise.all([
-    getPhotosByCategory("wedding"),
-    getPhotosByCategory("portrait"),
+    getFoldersByCategory("wedding"),
+    getFoldersByCategory("portrait"),
   ])
   return [...wedding, ...portrait]
+}
+
+export async function getFolderBySlug(
+  category: "wedding" | "portrait",
+  slug: string
+): Promise<PhotoFolder | undefined> {
+  const folders = await getFoldersByCategory(category)
+  return folders.find((f) => f.slug === slug)
 }
