@@ -3,8 +3,8 @@ import { getPhotosByCategory } from "@/app/_lib/photos"
 
 export const metadata = { title: "Portrait — Studio" }
 
-export default function PortraitPage() {
-  const photos = getPhotosByCategory("portrait")
+export default async function PortraitPage() {
+  const photos = await getPhotosByCategory("portrait")
   return (
     <div>
       <header className="px-8 pt-12 pb-2">

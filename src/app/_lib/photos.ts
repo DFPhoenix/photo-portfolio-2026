@@ -1,5 +1,12 @@
-import fs from "fs"
+import { v2 as cloudinary } from "cloudinary"
+import { unstable_cache } from "next/cache"
 import path from "path"
+
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? "dpfvicaqf",
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+})
 
 export type Photo = {
   id: string
@@ -9,38 +16,57 @@ export type Photo = {
   portrait: boolean
 }
 
-const IMAGE_RE = /\.(jpg|jpeg|png|webp|avif)$/i
-const PORTRAIT_RE = /-p\.(jpg|jpeg|png|webp|avif)$/i
+type CloudinaryResource = {
+  public_id: string
+  width: number
+  height: number
+}
 
-function titleFromFilename(file: string): string {
-  return path.basename(file, path.extname(file))
-    .replace(/-p$/, "")           // strip trailing -p portrait marker
-    .replace(/[-_]+/g, " ")       // hyphens/underscores → spaces
+function resourceToPhoto(
+  r: CloudinaryResource,
+  category: "wedding" | "portrait",
+  index: number
+): Photo {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? "dpfvicaqf"
+  const filename = path.basename(r.public_id)
+  const title = filename
+    .replace(/[-_]+/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase())
     .trim()
+
+  return {
+    id: `${category[0]}${index + 1}`,
+    title,
+    category,
+    src: `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto/${r.public_id}`,
+    portrait: r.height > r.width,
+  }
 }
 
-function scanCategory(category: "wedding" | "portrait"): Photo[] {
-  const dir = path.join(process.cwd(), "public", "photos", category)
-  let files: string[]
+async function fetchCategory(category: "wedding" | "portrait"): Promise<Photo[]> {
   try {
-    files = fs.readdirSync(dir).filter((f) => IMAGE_RE.test(f)).sort()
-  } catch {
+    const result = await cloudinary.api.resources_by_asset_folder(`galleries/${category}`, {
+      resource_type: "image",
+      max_results: 500,
+    })
+    return (result.resources as CloudinaryResource[])
+      .sort((a, b) => a.public_id.localeCompare(b.public_id))
+      .map((r, i) => resourceToPhoto(r, category, i))
+  } catch (err) {
+    console.error(`Failed to fetch ${category} photos from Cloudinary:`, err)
     return []
   }
-  return files.map((file, i) => ({
-    id: `${category[0]}${i + 1}`,
-    title: titleFromFilename(file),
-    category,
-    src: `/photos/${category}/${file}`,
-    portrait: PORTRAIT_RE.test(file),
-  }))
 }
 
-export function getPhotosByCategory(category: "wedding" | "portrait"): Photo[] {
-  return scanCategory(category)
-}
+// Cache each category separately; both share the "gallery" tag for revalidation
+export const getPhotosByCategory = unstable_cache(fetchCategory, ["cloudinary-gallery"], {
+  tags: ["gallery"],
+})
 
-export function getAllPhotos(): Photo[] {
-  return [...scanCategory("wedding"), ...scanCategory("portrait")]
+export async function getAllPhotos(): Promise<Photo[]> {
+  const [wedding, portrait] = await Promise.all([
+    getPhotosByCategory("wedding"),
+    getPhotosByCategory("portrait"),
+  ])
+  return [...wedding, ...portrait]
 }

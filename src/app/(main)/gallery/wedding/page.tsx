@@ -3,8 +3,8 @@ import { getPhotosByCategory } from "@/app/_lib/photos"
 
 export const metadata = { title: "Wedding — Studio" }
 
-export default function WeddingPage() {
-  const photos = getPhotosByCategory("wedding")
+export default async function WeddingPage() {
+  const photos = await getPhotosByCategory("wedding")
   return (
     <div>
       <header className="px-8 pt-12 pb-2">
