@@ -61,6 +61,7 @@ async function fetchCategory(category: "wedding" | "portrait"): Promise<Photo[]>
 // Cache each category separately; both share the "gallery" tag for revalidation
 export const getPhotosByCategory = unstable_cache(fetchCategory, ["cloudinary-gallery"], {
   tags: ["gallery"],
+  revalidate: 10,
 })
 
 export async function getAllPhotos(): Promise<Photo[]> {
