@@ -63,28 +63,32 @@ export default function LandingPage() {
       />
 
       {/* Content */}
-      <div className="relative z-10 flex h-full flex-col items-center justify-center text-center text-white px-8">
-        <p className="text-[10px] tracking-[0.5em] uppercase text-white/50 mb-8 font-light">
-          Photography Portfolio
-        </p>
+      <div className="relative z-10 flex h-full flex-col items-center text-center text-white px-8">
+        {/* ThereIsAShutter + Photography — centered vertically */}
+        <div className="absolute top-1/2 -translate-y-1/2 flex flex-col items-center">
+          <h1
+            className="text-5xl sm:text-6xl md:text-7xl font-extralight uppercase mb-4 transition-all duration-700 leading-tight"
+            style={{ letterSpacing: hovered ? "0.18em" : "0.12em" }}
+          >
+            ThereIsAShutter
+          </h1>
+          <p className="text-base tracking-[0.5em] uppercase text-white/50 font-light">
+            Photography
+          </p>
+        </div>
 
-        <h1
-          className="text-7xl sm:text-8xl md:text-9xl font-extralight uppercase mb-6 transition-all duration-700"
-          style={{ letterSpacing: hovered ? "0.18em" : "0.12em" }}
-        >
-          Studio
-        </h1>
-
-        <p className="text-white/40 text-xs tracking-[0.4em] uppercase font-light mb-16">
-          Moments &nbsp;·&nbsp; Stories &nbsp;·&nbsp; Light
-        </p>
-
-        <Link
-          href="/gallery"
-          className="text-[11px] tracking-[0.45em] uppercase border border-white/50 px-12 py-4 text-white/70 hover:text-white hover:border-white hover:bg-white/10 transition-all duration-300"
-        >
-          Explore
-        </Link>
+        {/* Moments + Explore — at the bottom, original gap preserved between them */}
+        <div className="absolute bottom-16 flex flex-col items-center">
+          <p className="text-white/40 text-xs tracking-[0.4em] uppercase font-light mb-16">
+            Moments &nbsp;·&nbsp; Stories &nbsp;·&nbsp; Light
+          </p>
+          <Link
+            href="/gallery"
+            className="text-[11px] tracking-[0.45em] uppercase border border-white/50 px-12 py-4 text-white/70 hover:text-white hover:border-white hover:bg-white/10 transition-all duration-300"
+          >
+            Explore
+          </Link>
+        </div>
       </div>
     </main>
   )

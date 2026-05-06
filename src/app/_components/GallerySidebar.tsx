@@ -21,9 +21,8 @@ export default function GallerySidebar() {
   return (
     <aside className="fixed left-0 top-0 h-screen w-56 bg-black flex flex-col pt-16 pb-10 px-8 z-20">
       <div className="mb-14">
-        <p className="text-[10px] tracking-[0.35em] uppercase text-white/40 mb-2">Photography</p>
-        <Link href="/gallery" className="text-white text-lg font-light tracking-widest hover:text-white/70 transition-colors">
-          STUDIO
+        <Link href="/gallery" className="text-white text-sm font-light leading-snug hover:text-white/70 transition-colors">
+          ThereIsAShutter<br />Photography
         </Link>
       </div>
 

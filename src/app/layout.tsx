@@ -8,8 +8,8 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Studio — Photography Portfolio",
-  description: "Photography portfolio — weddings, portraits, and more.",
+  title: "ThereIsAShutter Photography",
+  description: "ThereIsAShutter Photography — weddings, portraits, and more.",
 };
 
 export default function RootLayout({

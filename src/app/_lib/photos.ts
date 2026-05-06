@@ -23,8 +23,23 @@ export type PhotoFolder = {
   photos: Photo[]
 }
 
-type CloudinaryResource = { public_id: string; width: number; height: number }
+type CloudinaryResource = {
+  public_id: string
+  display_name?: string
+  width: number
+  height: number
+}
 type CloudinarySubFolder = { name: string; path: string }
+
+function titleFromResource(r: CloudinaryResource): string {
+  // Prefer display_name (updated when user renames in Cloudinary UI),
+  // fall back to the basename of public_id.
+  const raw = r.display_name ?? path.basename(r.public_id)
+  return raw
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim()
+}
 
 function resourceToPhoto(
   r: CloudinaryResource,
@@ -32,13 +47,9 @@ function resourceToPhoto(
   index: number
 ): Photo {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? "dpfvicaqf"
-  const title = path.basename(r.public_id)
-    .replace(/[-_]+/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim()
   return {
     id: `${category[0]}${index + 1}`,
-    title,
+    title: titleFromResource(r),
     category,
     src: `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto/${r.public_id}`,
     portrait: r.height > r.width,
@@ -53,6 +64,7 @@ async function fetchFolders(category: "wedding" | "portrait"): Promise<PhotoFold
       cloudinary.api.resources_by_asset_folder(`galleries/${category}`, {
         resource_type: "image",
         max_results: 500,
+        fields: "display_name,width,height,public_id",
       }).catch(() => ({ resources: [] })),
     ])
 
@@ -63,6 +75,7 @@ async function fetchFolders(category: "wedding" | "portrait"): Promise<PhotoFold
           const result = await cloudinary.api.resources_by_asset_folder(f.path, {
             resource_type: "image",
             max_results: 500,
+            fields: "display_name,width,height,public_id",
           })
           const photos = (result.resources as CloudinaryResource[])
             .sort((a, b) => a.public_id.localeCompare(b.public_id))

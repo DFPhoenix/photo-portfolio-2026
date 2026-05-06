@@ -46,9 +46,11 @@ export default function FolderCard({ folder }: { folder: PhotoFolder }) {
   return (
     <>
       <div
-        className="group relative cursor-pointer select-none"
+        className="group cursor-pointer select-none"
         onClick={handleCardClick}
       >
+        {/* Inner wrapper scoped to thumbnail height only — stack cards use inset-0 relative to this */}
+        <div className="relative">
         {/* Stack cards — only shown when folder has multiple photos */}
         {total > 2 && (
           <div
@@ -113,18 +115,14 @@ export default function FolderCard({ folder }: { folder: PhotoFolder }) {
 
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300 pointer-events-none" />
         </div>
+        </div>{/* end inner relative wrapper */}
 
-        {/* Label */}
-        <div className="mt-3 flex items-baseline justify-between px-0.5">
-          <span className="text-xs tracking-wider text-white/60">{folder.name}</span>
-          {isFolder && (
-            <span className="text-[10px] text-white/25 tabular-nums">{total} photos</span>
-          )}
-        </div>
+        {/* Label — hidden for single photos */}
         {isFolder && (
-          <p className="px-0.5 mt-1 text-[10px] text-white/20 tracking-widest">
-            Click to preview · Double-click to open
-          </p>
+          <div className="mt-3 flex items-baseline justify-between px-0.5">
+            <span className="text-xs tracking-wider text-white/60">{folder.name}</span>
+            <span className="text-[10px] text-white/25 tabular-nums">{total} photos</span>
+          </div>
         )}
       </div>
 
