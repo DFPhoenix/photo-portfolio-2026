@@ -118,7 +118,7 @@ async function fetchFolders(category: "wedding" | "portrait"): Promise<PhotoFold
 
 export const getFoldersByCategory = unstable_cache(fetchFolders, ["cloudinary-folders"], {
   tags: ["gallery"],
-  revalidate: 10,
+  revalidate: 60,
 })
 
 export async function getAllFolders(): Promise<PhotoFolder[]> {
