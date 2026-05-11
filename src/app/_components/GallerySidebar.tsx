@@ -4,10 +4,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 const navLinks = [
-  { href: "/gallery",          label: "Homepage" },
-  { href: "/gallery/wedding",  label: "Wedding"  },
-  { href: "/gallery/portrait", label: "Portrait" },
-  { href: "/contact",          label: "Contact"  },
+  { href: "/gallery",                label: "Homepage"       },
+  { href: "/gallery/wedding",        label: "Wedding"        },
+  { href: "/gallery/civil-ceremony", label: "Civil Ceremony" },
+  { href: "/gallery/pre-wedding",    label: "Pre-Wedding"    },
+  { href: "/gallery/portrait",       label: "Portrait"       },
+  { href: "/contact",                label: "Contact"        },
 ]
 
 export default function GallerySidebar() {

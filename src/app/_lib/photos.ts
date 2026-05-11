@@ -8,10 +8,12 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
+export type Category = "wedding" | "portrait" | "civil-ceremony" | "pre-wedding"
+
 export type Photo = {
   id: string
   title: string
-  category: "wedding" | "portrait"
+  category: Category
   src: string
   portrait: boolean
 }
@@ -19,7 +21,7 @@ export type Photo = {
 export type PhotoFolder = {
   name: string   // display name, e.g. "Summer 2024"
   slug: string   // Cloudinary subfolder name, used in URL
-  category: "wedding" | "portrait"
+  category: Category
   photos: Photo[]
 }
 
@@ -43,7 +45,7 @@ function titleFromResource(r: CloudinaryResource): string {
 
 function resourceToPhoto(
   r: CloudinaryResource,
-  category: "wedding" | "portrait",
+  category: Category,
   index: number
 ): Photo {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? "dpfvicaqf"
@@ -56,7 +58,7 @@ function resourceToPhoto(
   }
 }
 
-async function fetchFolders(category: "wedding" | "portrait"): Promise<PhotoFolder[]> {
+async function fetchFolders(category: Category): Promise<PhotoFolder[]> {
   try {
     // Run subfolder list + direct-photo fetch in parallel
     const [{ folders }, directResult] = await Promise.all([
@@ -122,15 +124,17 @@ export const getFoldersByCategory = unstable_cache(fetchFolders, ["cloudinary-fo
 })
 
 export async function getAllFolders(): Promise<PhotoFolder[]> {
-  const [wedding, portrait] = await Promise.all([
+  const [wedding, portrait, civil, preWedding] = await Promise.all([
     getFoldersByCategory("wedding"),
     getFoldersByCategory("portrait"),
+    getFoldersByCategory("civil-ceremony"),
+    getFoldersByCategory("pre-wedding"),
   ])
-  return [...wedding, ...portrait]
+  return [...wedding, ...portrait, ...civil, ...preWedding]
 }
 
 export async function getFolderBySlug(
-  category: "wedding" | "portrait",
+  category: Category,
   slug: string
 ): Promise<PhotoFolder | undefined> {
   const folders = await getFoldersByCategory(category)

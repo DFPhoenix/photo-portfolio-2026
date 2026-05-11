@@ -14,7 +14,11 @@ export async function POST(req: NextRequest) {
   revalidateTag("gallery", "max")
 
   // Revalidate the specific gallery page based on which folder changed
-  if (publicId.includes("wedding")) {
+  if (publicId.includes("civil-ceremony")) {
+    revalidatePath("/gallery/civil-ceremony")
+  } else if (publicId.includes("pre-wedding")) {
+    revalidatePath("/gallery/pre-wedding")
+  } else if (publicId.includes("wedding")) {
     revalidatePath("/gallery/wedding")
   } else if (publicId.includes("portrait")) {
     revalidatePath("/gallery/portrait")
